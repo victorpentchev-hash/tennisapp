@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tennis Score</title>
+
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    h1 { color: green; }
+    button { margin: 10px; padding: 10px 20px; font-size: 18px; }
+  </style>
+
+  
+</head>
+<body>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/69/69524.png">
+
+  <h1>🎾 Tennis Live Score</h1>
+
+  <div>
+    <input id="playerName" placeholder="Dein Name" />
+    <button onclick="createMatch()">Match erstellen</button>
+    <button onclick="joinMatch()">Match beitreten</button>
+  </div>
+
+  <p id="matchCode"></p>
+  <h2 id="score">Spielstand: 0 - 0</h2>
+
+  <button onclick="addPoint('me')">+ Punkt für mich</button>
+  <button onclick="addPoint('opponent')">+ Punkt Gegner</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+
+  <script>
+    // 👉 Hier deine Firebase-Daten eintragen!
+    const firebaseConfig = {
+      apiKey: "DEIN_API_KEY",
+      authDomain: "DEIN_PROJECT.firebaseapp.com",
+      databaseURL: "https://DEIN_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "DEIN_PROJECT",
+      storageBucket: "DEIN_PROJECT.appspot.com",
+      messagingSenderId: "DEINE_SENDER_ID",
+      appId: "DEINE_APP_ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let currentMatch = null;
+
+    function createMatch() {
+      const code = Math.random().toString(36).substring(2,7).toUpperCase();
+      currentMatch = db.ref("matches/" + code);
+      currentMatch.set({ me: 0, opponent: 0 });
+      document.getElementById("matchCode").innerText = "Match Code: " + code;
+      listenScore(currentMatch);
+    }
+
+    function joinMatch() {
+      const code = prompt("Gib den Match-Code ein:");
+      currentMatch = db.ref("matches/" + code);
+      listenScore(currentMatch);
+    }
+
+    function addPoint(who) {
+      if (!currentMatch) return;
+      currentMatch.get().then(snapshot => {
+        let data = snapshot.val();
+        if (data) {
+          data[who] += 1;
+          currentMatch.set(data);
+        }
+      });
+    }
+
+    function listenScore(ref) {
+      ref.on("value", snap => {
+        const data = snap.val();
+        if (data) {
+          document.getElementById("score").innerText =
+            "Spielstand: " + data.me + " - " + data.opponent;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
